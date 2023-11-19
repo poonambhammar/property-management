@@ -22,22 +22,19 @@ public class PropertyController {
 
     @GetMapping("/sayhello")
     public String sayHello() {
-        System.out.println(accessLocalProp);
         return "Saying Hello";
     }
 
     @PostMapping("/save")
     public ResponseEntity<PropertyDTO> save(@RequestBody PropertyDTO propertyDTO) {
         propertyDTO = propertyService.save(propertyDTO);
-        ResponseEntity<PropertyDTO> propertyDTOResponseEntity = new ResponseEntity<>(propertyDTO, HttpStatus.CREATED);
-        return propertyDTOResponseEntity;
+        return new ResponseEntity<>(propertyDTO, HttpStatus.CREATED);
     }
 
     @GetMapping("/properties")
     public ResponseEntity<PropertyDTO> getAllProperties() {
         List<PropertyDTO> propertyDTOS = propertyService.getAll();
-        ResponseEntity<PropertyDTO> responseEntity = new ResponseEntity(propertyDTOS, HttpStatus.OK);
-        return responseEntity;
+        return new ResponseEntity(propertyDTOS, HttpStatus.OK);
     }
 
     @PutMapping("/property/{propertyId}")
@@ -68,8 +65,7 @@ public class PropertyController {
     @DeleteMapping("/property/{Id}")
     public ResponseEntity<Void> deleteProperty(@PathVariable Long Id){
         propertyService.deletePropertyById(Id);
-         ResponseEntity<Void> responseEntity = new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
-        return responseEntity;
+         return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
     }
 
 }
