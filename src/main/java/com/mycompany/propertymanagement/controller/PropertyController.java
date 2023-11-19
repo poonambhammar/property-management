@@ -23,7 +23,7 @@ public class PropertyController {
     @GetMapping("/sayhello")
     public String sayHello() {
         System.out.println(accessLocalProp);
-        return "Say Hello";
+        return "Saying Hello";
     }
 
     @PostMapping("/save")
