@@ -4,7 +4,11 @@ package com.mycompany.propertymanagement.service.impl;
 import com.mycompany.propertymanagement.convertor.PropertyConvertor;
 import com.mycompany.propertymanagement.dto.PropertyDTO;
 import com.mycompany.propertymanagement.entity.PropertyEntity;
+import com.mycompany.propertymanagement.entity.UserEntity;
+import com.mycompany.propertymanagement.exception.BusinessException;
+import com.mycompany.propertymanagement.exception.ErrorModel;
 import com.mycompany.propertymanagement.repository.PropertyRepository;
+import com.mycompany.propertymanagement.repository.UserRepository;
 import com.mycompany.propertymanagement.service.PropertyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,11 +26,28 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private PropertyConvertor propertyConvertor;
 
+    @Autowired
+    UserRepository userRepository;
+
     @Override
     public PropertyDTO save(PropertyDTO propertyDTO) {
-        PropertyEntity propertyEntity = propertyConvertor.propertyDTOToEntity(propertyDTO);
-        propertyEntity = propertyRepository.save(propertyEntity);
-        propertyDTO = propertyConvertor.propertyEntityToDTO(propertyEntity);
+
+        Optional<UserEntity> userEntity = userRepository.findById(propertyDTO.getUserId());
+        if (userEntity.isPresent()) {
+
+            PropertyEntity propertyEntity = propertyConvertor.propertyDTOToEntity(propertyDTO);
+            propertyEntity.setUserEntity(userEntity.get());
+            propertyEntity = propertyRepository.save(propertyEntity);
+            propertyDTO = propertyConvertor.propertyEntityToDTO(propertyEntity);
+
+        } else {
+            List<ErrorModel> errorModelList = new ArrayList<>();
+            ErrorModel errorModel = new ErrorModel();
+            errorModel.setCode("Invalid User");
+            errorModel.setMessage("User doesn't exists");
+            errorModelList.add(errorModel);
+            throw new BusinessException(errorModelList);
+        }
         return propertyDTO;
     }
 
@@ -45,10 +66,22 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-        public PropertyDTO updateProperties(PropertyDTO propertyDTO, Long propertyId) {
+    public List<PropertyDTO> getPropertyByUserId(Long userId) {
+        List<PropertyEntity> propertyEntityList = (List<PropertyEntity>) propertyRepository.findAllByUserEntityUserId(userId);
+        List<PropertyDTO> propertyDTOList = new ArrayList<>();
+        for (PropertyEntity pe : propertyEntityList) {
+            PropertyDTO dto = propertyConvertor.propertyEntityToDTO(pe);
+            propertyDTOList.add(dto);
+
+        }
+        return propertyDTOList;
+    }
+
+    @Override
+    public PropertyDTO updateProperties(PropertyDTO propertyDTO, Long propertyId) {
         Optional<PropertyEntity> optionalProperty = propertyRepository.findById(propertyId);
         PropertyDTO propertyDTOUpdated = new PropertyDTO();
-        if(optionalProperty.isPresent()) {
+        if (optionalProperty.isPresent()) {
             PropertyEntity propertyEntity = optionalProperty.get();
             propertyEntity.setTitle(propertyDTO.getTitle());
             propertyEntity.setDescription(propertyDTO.getDescription());
@@ -64,10 +97,10 @@ public class PropertyServiceImpl implements PropertyService {
     public PropertyDTO updatePropertiesDescription(PropertyDTO propertyDTO, Long propertyId) {
         Optional<PropertyEntity> optionalProperty = propertyRepository.findById(propertyId);
         PropertyDTO propertyDTOUpdated = new PropertyDTO();
-        if(optionalProperty.isPresent()) {
+        if (optionalProperty.isPresent()) {
             PropertyEntity propertyEntity = optionalProperty.get();
             propertyEntity.setDescription(propertyDTO.getDescription());
-            propertyEntity =propertyRepository.save(propertyEntity);
+            propertyEntity = propertyRepository.save(propertyEntity);
             propertyDTOUpdated = propertyConvertor.propertyEntityToDTO(propertyEntity);
         }
         return propertyDTOUpdated;
@@ -77,7 +110,7 @@ public class PropertyServiceImpl implements PropertyService {
     public PropertyDTO updatePropertiesPrice(PropertyDTO propertyDTO, Long propertyId) {
         Optional<PropertyEntity> optionalProperty = propertyRepository.findById(propertyId);
         PropertyDTO propertyDTOUpdated = new PropertyDTO();
-        if(optionalProperty.isPresent()) {
+        if (optionalProperty.isPresent()) {
             PropertyEntity propertyEntity = optionalProperty.get();
             propertyEntity.setPrice(propertyDTO.getPrice());
             propertyEntity = propertyRepository.save(propertyEntity);
